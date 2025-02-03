@@ -1,23 +1,37 @@
+
+from models.models import User, Room, Menssage # Importação de modelo de user para o app
+
+from routes.auth import auth
+
 from flask import Flask
 from flask_socketio import SocketIO, join_room, leave_room, emit
 
 from extensions import db, jwt
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 
+from flask_sqlalchemy import SQLAlchemy
+
 # Inicializa o Flask
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-app.config['SECRET_KEY'] = SECRET_KEY
+app.config.from_object('config')
+# app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+# app.config['SECRET_KEY'] = SECRET_KEY
 
 # Instância do SocketIO sem inicializar com app diretamente
 socketio = SocketIO(cors_allowed_origins="*")
 
 # Inicializa as extensões
-db.init_app(app)
+# db.init_app(app) antiga inicialização
+db = SQLAlchemy(app)
+
 jwt.init_app(app)
 socketio.init_app(app)
 
-# Teste básico de funcionamento
+
+with app.app_context():
+    db.create_all() # isso cria todas as tabelas defindas
+
+
 @app.route('/')
 def home():
     return {"message": "Bem-vindo ao SóPapo!"}
@@ -47,7 +61,7 @@ def handle_send_message(data):
     emit('receive_message', {'message': f'{username}: {message}'}, room=room)
 
 # Importação de rotas no final para evitar importação circular
-from routes.auth import auth
+
 app.register_blueprint(auth, url_prefix='/auth')
 
 # Executa o servidor
