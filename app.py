@@ -3,10 +3,12 @@ from models.models import User, Room, Menssage # Importação de modelo de user 
 
 from routes.auth import auth
 
-from flask import Flask
+from flask import Flask, jsonify
+
 from flask_socketio import SocketIO, join_room, leave_room, emit
 
 from extensions import db, jwt
+
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 
 from flask_sqlalchemy import SQLAlchemy
@@ -27,14 +29,29 @@ db = SQLAlchemy(app)
 jwt.init_app(app)
 socketio.init_app(app)
 
-
 with app.app_context():
     db.create_all() # isso cria todas as tabelas defindas
-
 
 @app.route('/')
 def home():
     return {"message": "Bem-vindo ao SóPapo!"}
+
+@app.route('/teste_db', methods=['GET'])
+def teste_db():
+    # Criar um novo usuário para testar a persistência
+    new_user = User(username="test_user", password="test_password", email="test_user@example.com")
+    db.session.add(new_user)
+    db.session.commit()
+
+    # Verificar se o usuário foi salvo
+    user = User.query.filter_by(username="test_user").first()
+
+    # Retornar o resultado
+    if user:
+        return jsonify({"message": f"Usuário {user.username} registrado com sucesso!"}), 200
+    else:
+        return jsonify({"message": "Erro ao registrar usuário."}), 500
+
 
 # Evento para quando um cliente entra na sala
 @socketio.on('join_room')  

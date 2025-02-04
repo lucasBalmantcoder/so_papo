@@ -26,7 +26,7 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
-class Message(db.Model):
+class Menssage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
