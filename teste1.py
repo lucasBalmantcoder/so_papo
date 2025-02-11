@@ -1,4 +1,4 @@
-import socketio
+import socketio # type: ignore
 
 # Cliente Socket.IO
 sio = socketio.Client()

@@ -1,26 +1,32 @@
 import psycopg2
+from dotenv import load_dotenv
 
-def create_db():
-    # Conectando ao banco de dados PostgreSQL
-    connect_db = psycopg2.connect(
-        dbname='postgres', user='postgres', password='mysenha', host='localhost', port='5432'
-    )
+load_dotenv()
 
-    connect_db.autocommit = True  # Garante que o comando CREATE DATABASE seja executado sem precisar de commit
-    cursor = connect_db.cursor()
 
-    # Criando o banco de dados
-    cursor.execute('CREATE DATABASE sopapo;')
-    print("Banco de dados 'sopapo' criado com sucesso!")
+# apenas use se o banco n estiver sido criado.
 
-    # Fechar conexão com o banco de dados
-    cursor.close()
-    connect_db.close()
+# def create_db():
+#     # Conectando ao banco de dados PostgreSQL
+#     connect_db = psycopg2.connect(
+#         dbname='sopapobd', user='superuser', password='mysenha', host='localhost', port='5432'
+#     )
+
+#     connect_db.autocommit = True  # Garante que o comando CREATE DATABASE seja executado sem precisar de commit
+#     cursor = connect_db.cursor()
+
+#     # Criando o banco de dados
+#     cursor.execute('CREATE DATABASE sopapobd;')
+#     print("Banco de dados 'sopapobd' criado com sucesso!")
+
+#     # Fechar conexão com o banco de dados
+#     cursor.close()
+#     connect_db.close()
 
 def create_table():
-    # Conecta ao banco de dados que foi criado ('sopapo')
-    connect_db = psycopg2.connect(
-        dbname='sopapo', user='postgres', password='mysenha', host='localhost', port='5432'
+    # Conecta ao banco de dados que foi criado ('sopapobd')
+    # Essas infos eu criei usando o .env
+    connect_db = psycopg2.connect(dbname= 'DATABASE', user='SUPERUSER',password='SUPERPASSWORD', host='localhost', port='5432'
     )
 
     cursor = connect_db.cursor()
@@ -58,5 +64,5 @@ def create_table():
     connect_db.close()
 
 if __name__ == '__main__':
-    create_db()    # Criar banco de dados
+    # create_db()    # Criar banco de dados
     create_table()  # Criar tabelas
