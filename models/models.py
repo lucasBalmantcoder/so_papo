@@ -4,10 +4,9 @@ from datetime import datetime
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), nullable=False)
-    password_hash = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), nullable=False)
-
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
 
     def set_password(self, password):
         """Gera e armazena o hash da senha"""
@@ -26,12 +25,17 @@ class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
 
-class Menssage(db.Model):
+class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    message = db.Column(db.Text, nullable=False)
+    username = db.Column(db.String(100), nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
+    message = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     timestamp = db.Column(db.DateTime, default=datetime.now())
+
+    # Indidicadores de envio de msg
+    delivered = db.Column(db.Boolean, default=False) #se foi enviada
+    read = db.Column(db.Boolean, default=False) #se foi lida
 
     
 

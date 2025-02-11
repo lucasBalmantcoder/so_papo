@@ -1,85 +1,33 @@
-
-from models.models import User, Room, Menssage # Importação de modelo de user para o app
-
-from routes.auth import auth
-
-from flask import Flask, jsonify
-
-from flask_socketio import SocketIO, join_room, leave_room, emit
-
-from extensions import db, jwt
-
+from flask import Flask, render_template, request 
+from flask_socketio import join_room, leave_room, emit 
+# from flask_sqlalchemy import SQLAlchemy
+from extensions import db, jwt, socketio # isso importa as extensões
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
-
-from flask_sqlalchemy import SQLAlchemy
+from models.models import User, Room, Message 
+from routes.auth import auth  # Importação de rotas
+from sockets import socketio
 
 # Inicializa o Flask
 app = Flask(__name__)
 app.config.from_object('config')
-# app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-# app.config['SECRET_KEY'] = SECRET_KEY
-
-# Instância do SocketIO sem inicializar com app diretamente
-socketio = SocketIO(cors_allowed_origins="*")
 
 # Inicializa as extensões
-# db.init_app(app) antiga inicialização
-db = SQLAlchemy(app)
-
+db.init_app(app)
 jwt.init_app(app)
 socketio.init_app(app)
 
 with app.app_context():
-    db.create_all() # isso cria todas as tabelas defindas
+    print("Criando tabelas no banco de dados...")
+    db.create_all()
 
-@app.route('/')
-def home():
-    return {"message": "Bem-vindo ao SóPapo!"}
-
-@app.route('/teste_db', methods=['GET'])
-def teste_db():
-    # Criar um novo usuário para testar a persistência
-    new_user = User(username="test_user", password="test_password", email="test_user@example.com")
-    db.session.add(new_user)
-    db.session.commit()
-
-    # Verificar se o usuário foi salvo
-    user = User.query.filter_by(username="test_user").first()
-
-    # Retornar o resultado
-    if user:
-        return jsonify({"message": f"Usuário {user.username} registrado com sucesso!"}), 200
-    else:
-        return jsonify({"message": "Erro ao registrar usuário."}), 500
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    return render_template('index.html')
 
 
-# Evento para quando um cliente entra na sala
-@socketio.on('join_room')  
-def handle_join_room(data):
-    username = data.get('username')
-    room = data.get('room')
-    join_room(room)
-    emit('receive_message', {'message': f'{username} entrou na sala {room}'}, room=room)
-
-# Evento para quando um cliente sai da sala
-@socketio.on('leave_room')  
-def handle_leave_room(data):
-    username = data.get('username')
-    room = data.get('room')
-    leave_room(room)
-    emit('receive_message', {'message': f'{username} saiu da sala {room}'}, room=room)
-
-# Evento para envio de mensagens
-@socketio.on('send_message')
-def handle_send_message(data):
-    username = data.get('username')
-    room = data.get('room')
-    message = data.get('message')
-    emit('receive_message', {'message': f'{username}: {message}'}, room=room)
 
 # Importação de rotas no final para evitar importação circular
-
-app.register_blueprint(auth, url_prefix='/auth')
+app.register_blueprint(auth)
 
 # Executa o servidor
 if __name__ == '__main__':

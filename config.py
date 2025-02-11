@@ -1,7 +1,10 @@
 import os
+from dotenv import load_dotenv
 
-# Configuração básica
-SECRET_KEY = os.getenv('SECRET_KEY', 'chave-secreta')
-SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'postgresql://postgres:mysenha@localhost:5432/sopapo')
+load_dotenv()
+
+# Configuração básica da aplicaçaão
+SECRET_KEY = os.getenv('SECRET_KEY')
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
-JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'jwt-secreto')
+JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY')
