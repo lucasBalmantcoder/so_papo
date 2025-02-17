@@ -19,11 +19,16 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.username}>'
 
-
+user_room_association = db.Table(
+    'user_room',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('room_id', db.Integer, db.ForeignKey('room.id'))
+)
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    users = db.relationship('User', secondary=user_room_association, backref='rooms')
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -36,6 +41,8 @@ class Message(db.Model):
     # Indidicadores de envio de msg
     delivered = db.Column(db.Boolean, default=False) #se foi enviada
     read = db.Column(db.Boolean, default=False) #se foi lida
+
+
 
     
 
