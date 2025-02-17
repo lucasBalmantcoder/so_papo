@@ -1,7 +1,23 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token
-from models.models import User, Room
+from models.models import User, Room, Message
 from extensions import db
+
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+@auth.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    #verificar depois como arrumar
+    return jsonify({"message": "Logout realizado com sucesso"}), 200
+
+
+@auth.route('/profile', methods=['GET']) # type: ignore
+@jwt_required()
+def profile():
+    current_user = get_jwt_identity()
+    return jsonify({"message": f"Bem-vindo, {current_user}"})
 
 # Registra o Blueprint SEM um prefixo
 auth = Blueprint('auth', __name__)
@@ -82,7 +98,7 @@ def login():
 
     token = create_access_token(identity=username)
     return jsonify({"token": token}), 200
-    print(token)
+    # print(token)
 
 
 #rotas para salas
@@ -116,4 +132,80 @@ def get_rooms():
     return jsonify(rooms_list), 200
 
 
-# @auth.route("/join_room", methods=['POST'])
+
+#rotas para mensagens
+@auth.route("/send_message", methods=['POST'])
+def send_message():
+    '''Função que faz envio de mensagens, para o user que está na sala atual'''
+    '''e aṕos, salva no db e retorna a mensagem com o id salvo no db'''
+    data = request.get_json()
+    
+    username = data.get("username")
+    room_id = data.get("room_id")
+    message_content = data.get("message")
+    user_id = data.get("user_id")
+
+    if not username or not room_id or not message_content or not user_id:
+        return jsonify({"message": "Dados inválidos para enviar a mensagem"}), 400
+
+    room = Room.query.get(room_id)  # .get() recebe apenas o ID diretamente
+    user = User.query.get(user_id)
+
+    if not room or not user:
+        return jsonify({    "message": "Sala ou usuário não encontrados" }), 404
+    
+    # Criar e salvar a mensagem no banco de dados
+    new_message = Message(
+        username=username,
+        room_id=room_id,
+        user_id=user_id,
+        message = message_content,
+        timestamp=datetime.now()
+        )
+    db.session.add(new_message)
+    db.session.commit()
+
+
+    #saída da api para o frontend
+    return jsonify({
+        "message_id": new_message.id,
+        "username": username,
+        "message" : message_content,
+        "timestamp": new_message.timestamp.isoformat()
+
+    }), 201
+
+    # Emitir a mensagem com o ID salvo no banco para controle
+
+@auth.route("/join_room", methods=['POST'])
+def join_room():
+    """Adiciona um usuário a uma sala existente."""
+    data = request.get_json()
+
+    user_id = data.get("user_id")
+    room_id = data.get("room_id")
+
+
+    # Verifica se os IDs são números inteiros
+    try:
+        user_id = int(user_id)
+        room_id = int(room_id)
+    except ValueError:
+        return jsonify({"message": "IDs de usuário e sala devem ser números inteiros"}), 400
+
+    # Verifica se a sala e o usuário existem
+    room = Room.query.get(room_id)
+    user = User.query.get(user_id)
+
+    if not room:
+        return jsonify({"message": "Sala não encontrada"}), 404
+    if not user:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+
+    # Adiciona o usuário à sala (Aqui depende da sua modelagem, veja abaixo)
+    if hasattr(room, 'users') and user not in room.users:
+        room.users.append(user)
+        db.session.commit()
+        return jsonify({"message": f"Usuário {user.username} entrou na sala {room.name}"}), 200
+    else:
+        return jsonify({"message": "Usuário já está na sala ou não há suporte para essa funcionalidade"}), 400

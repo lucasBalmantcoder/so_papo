@@ -6,11 +6,12 @@ from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 from models.models import User, Room, Message 
 from routes.auth import auth  # Importação de rotas
 from sockets import socketio
+from flask_cors import CORS
 
 # Inicializa o Flask
 app = Flask(__name__)
 app.config.from_object('config')
-
+CORS(app, resources={r"/*": {"origins": "http://localhost:3001"}})
 # Inicializa as extensões
 db.init_app(app)
 jwt.init_app(app)
