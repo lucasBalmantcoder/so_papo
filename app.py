@@ -11,7 +11,9 @@ from flask_cors import CORS
 # Inicializa o Flask
 app = Flask(__name__)
 app.config.from_object('config')
-CORS(app, resources={r"/*": {"origins": "http://localhost:3001"}})
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+
+
 # Inicializa as extensões
 db.init_app(app)
 jwt.init_app(app)
@@ -23,7 +25,7 @@ with app.app_context():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
+    return "A api está rodando!"
 
 
 

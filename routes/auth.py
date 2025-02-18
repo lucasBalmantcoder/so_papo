@@ -1,10 +1,12 @@
 from datetime import datetime
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token
-from models.models import User, Room, Message
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from models.models import User, Room, Message, user_room_association
 from extensions import db
 
-from flask_jwt_extended import jwt_required, get_jwt_identity
+# Registra o Blueprint SEM um prefixo
+auth = Blueprint('auth', __name__)
+
 
 @auth.route('/logout', methods=['POST'])
 @jwt_required()
@@ -19,8 +21,6 @@ def profile():
     current_user = get_jwt_identity()
     return jsonify({"message": f"Bem-vindo, {current_user}"})
 
-# Registra o Blueprint SEM um prefixo
-auth = Blueprint('auth', __name__)
 
 # auth = Blueprint('auth', __name__)
 
@@ -209,3 +209,47 @@ def join_room():
         return jsonify({"message": f"Usuário {user.username} entrou na sala {room.name}"}), 200
     else:
         return jsonify({"message": "Usuário já está na sala ou não há suporte para essa funcionalidade"}), 400
+
+# @auth.route("/conversations", methods=['GET'])
+# @jwt_required()
+# def get_conversations():
+#     # Obtém o ID do usuário autenticado
+#     current_user_id = get_jwt_identity()
+
+#     # Busca os chats privados (lista de outros usuários)
+#     private_chats = (
+#         db.session.query(User.id, User.username)
+#         .filter(User.id != current_user_id)  # Exclui o próprio usuário
+#         .all()
+#     )
+#     private_chats_list = [{"id": user.id, "name": user.username} for user in private_chats]
+
+#     # Busca as salas (grupos) onde o usuário está
+#     user_groups = (
+#         db.session.query(Room.id, Room.name)
+#         .join(user_room_association)
+#         .filter(user_room_association.c.user_id == current_user_id)
+#         .all()
+#     )
+#     groups_list = [{"id": room.id, "name": room.name} for room in user_groups]
+
+#     return jsonify({"private_chats": private_chats_list, "groups": groups_list}), 200
+
+
+@auth.route("/conversations", methods=['GET'])
+@jwt_required()
+def get_conversations():
+    user_identity = get_jwt_identity()  # Obtém a identidade do usuário autenticado
+
+    # Simulação de dados (substitua por banco de dados)
+    private_chats = [
+        {"id": 1, "name": "Alice"},
+        {"id": 2, "name": "Bob"},
+    ]
+    groups = [
+        {"id": 10, "name": "Grupo de Estudos"},
+        {"id": 11, "name": "Trabalho em Equipe"},
+    ]
+
+    return jsonify({"private_chats": private_chats, "groups": groups}), 200
+
