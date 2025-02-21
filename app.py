@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request 
+from flask_jwt_extended import JWTManager
 from flask_socketio import join_room, leave_room, emit 
 # from flask_sqlalchemy import SQLAlchemy
 from extensions import db, jwt, socketio # isso importa as extensões
@@ -12,7 +13,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 app.config.from_object('config')
 CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
-
+jwt = JWTManager(app)
 
 # Inicializa as extensões
 db.init_app(app)

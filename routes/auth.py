@@ -1,11 +1,69 @@
+from datetime import datetime, timedelta
+
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from models.models import User, Room, Message, user_room_association
+import jwt
+from datetime import datetime, timedelta
+from config import SECRET_KEY, JWT_EXPIRATION_DELTA
 from extensions import db
+
+
+from werkzeug.security import check_password_hash
+
 
 # Registra o Blueprint SEM um prefixo
 auth = Blueprint('auth', __name__)
+
+def create_token(user_id):
+    payload = {
+        "sub": str(user_id),  # Garantir que seja uma string
+        "iat": datetime.now(),
+        "exp": datetime.now() + timedelta(seconds=JWT_EXPIRATION_DELTA)
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    return token
+
+
+# Decodifica o token JWT
+def decode_token(token):
+    try:
+        decoded = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return decoded
+    except jwt.ExpiredSignatureError:
+        return None
+    except jwt.InvalidTokenError:
+        return None
+
+# Rota para login
+@auth.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    
+    # Verifica se o corpo da requisição está no formato JSON
+    if not data:
+        return jsonify({"message": "Formato JSON inválido ou ausente"}), 400
+
+    username = data.get('username')
+    password = data.get('password')
+
+    # Verifica se o username e password foram fornecidos
+    if not username or not password:
+        return jsonify({"message": "Usuário e senha são obrigatórios"}), 400
+
+    # Busca o usuário no banco de dados
+    user = User.query.filter_by(username=username).first()
+
+    # Verifica se o usuário existe e se a senha está correta
+    if not user or not check_password_hash(user.password_hash, password):
+        return jsonify({"message": "Credenciais inválidas"}), 401
+
+    # Gera o token com o ID do usuário
+    token = create_access_token(identity=user.id)
+
+    return jsonify({"token": token}), 200
+
 
 
 @auth.route('/logout', methods=['POST'])
@@ -80,25 +138,6 @@ def delete_user():
     return jsonify({"message": "Usuário deletado com sucesso"}), 200
 
 #faz o login
-@auth.route('/login', methods=['POST'])
-def login():
-    data = request.get_json()
-    if not data:
-        return jsonify({"message": "Formato JSON inválido ou ausente"}), 400
-
-    username = data.get('username')
-    password = data.get('password')
-
-    if not username or not password:
-        return jsonify({"message": "Usuário e senha são obrigatórios"}), 400
-
-    user = User.query.filter_by(username=username).first()
-    if not user or not user.check_password(password):
-        return jsonify({"message": "Credenciais inválidas"}), 401
-
-    token = create_access_token(identity=username)
-    return jsonify({"token": token}), 200
-    # print(token)
 
 
 #rotas para salas
@@ -151,7 +190,7 @@ def send_message():
     room = Room.query.get(room_id)  # .get() recebe apenas o ID diretamente
     user = User.query.get(user_id)
 
-    if not room or not user:
+    if not room or not user_id:
         return jsonify({    "message": "Sala ou usuário não encontrados" }), 404
     
     # Criar e salvar a mensagem no banco de dados
@@ -210,46 +249,39 @@ def join_room():
     else:
         return jsonify({"message": "Usuário já está na sala ou não há suporte para essa funcionalidade"}), 400
 
-# @auth.route("/conversations", methods=['GET'])
-# @jwt_required()
-# def get_conversations():
-#     # Obtém o ID do usuário autenticado
-#     current_user_id = get_jwt_identity()
-
-#     # Busca os chats privados (lista de outros usuários)
-#     private_chats = (
-#         db.session.query(User.id, User.username)
-#         .filter(User.id != current_user_id)  # Exclui o próprio usuário
-#         .all()
-#     )
-#     private_chats_list = [{"id": user.id, "name": user.username} for user in private_chats]
-
-#     # Busca as salas (grupos) onde o usuário está
-#     user_groups = (
-#         db.session.query(Room.id, Room.name)
-#         .join(user_room_association)
-#         .filter(user_room_association.c.user_id == current_user_id)
-#         .all()
-#     )
-#     groups_list = [{"id": room.id, "name": room.name} for room in user_groups]
-
-#     return jsonify({"private_chats": private_chats_list, "groups": groups_list}), 200
-
-
 @auth.route("/conversations", methods=['GET'])
 @jwt_required()
 def get_conversations():
-    user_identity = get_jwt_identity()  # Obtém a identidade do usuário autenticado
+    # Obtém o ID do usuário autenticado do JWT
+    current_user_id = get_jwt_identity()
 
-    # Simulação de dados (substitua por banco de dados)
-    private_chats = [
-        {"id": 1, "name": "Alice"},
-        {"id": 2, "name": "Bob"},
-    ]
-    groups = [
-        {"id": 10, "name": "Grupo de Estudos"},
-        {"id": 11, "name": "Trabalho em Equipe"},
-    ]
+    # Adiciona um log para verificar o valor de current_user_id
+    print("JWT Payload (sub):", current_user_id)
 
-    return jsonify({"private_chats": private_chats, "groups": groups}), 200
+    # Verifica se o ID do usuário é uma string (isso pode ser útil para depuração)
+    if not isinstance(current_user_id, (str, int)):
+        return jsonify({"error": "ID do usuário inválido"}), 400
+
+    # Continue com a lógica do endpoint
+    private_chats = (
+        db.session.query(User.id, User.username)
+        .filter(User.id != current_user_id)
+        .all()
+    )
+
+    user_groups = (
+        db.session.query(Room.id, Room.name)
+        .join(user_room_association)
+        .filter(user_room_association.c.user_id == current_user_id)
+        .all()
+    )
+
+    return jsonify({
+        "private_chats": [{"id": user.id, "name": user.username} for user in private_chats],
+        "groups": [{"id": room.id, "name": room.name} for room in user_groups]
+    }), 200
+
+
+
+
 

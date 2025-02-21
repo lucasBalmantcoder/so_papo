@@ -16,9 +16,15 @@ class User(db.Model):
         """Verifica se a senha fornecida corresponde ao hash armazenado"""
         return check_password_hash(self.password_hash, password)
 
+    @staticmethod
+    def find_by_username(username):
+        """Procura um usuário pelo nome de usuário"""
+        return User.query.filter_by(username=username).first()
+
     def __repr__(self):
         return f'<User {self.username}>'
 
+# Associação entre usuários e salas
 user_room_association = db.Table(
     'user_room',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id')),
@@ -36,12 +42,8 @@ class Message(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
     message = db.Column(db.Text, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    timestamp = db.Column(db.DateTime, default=datetime.now())
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Indidicadores de envio de msg
+    # Indicadores de envio de msg
     delivered = db.Column(db.Boolean, default=False) #se foi enviada
     read = db.Column(db.Boolean, default=False) #se foi lida
-
-
-
-    
