@@ -1,6 +1,5 @@
 from typing import Optional
 
-
 class AuthorizationException(Exception):
     status_code = 401
 
@@ -32,9 +31,10 @@ class NotFoundException(Exception):
 
 class BadRequestException(Exception):
     status_code = 400
+
     def __init__(self, message: Optional[str] = None, data: Optional[dict] = None):
-        super().__init__(message or "Not Found")
-        self.message = message or "Not Found"
+        super().__init__(message or "Bad Request")  # Corrigido para "Bad Request"
+        self.message = message or "Bad Request"  # Corrigido para "Bad Request"
         self.data = data
 
     def dict(self):
@@ -42,5 +42,3 @@ class BadRequestException(Exception):
             "message": self.message,
             "data": self.data,
         }
-    
-    

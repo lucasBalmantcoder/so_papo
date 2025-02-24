@@ -1,14 +1,61 @@
-from flask import Flask, jsonify
+from flask import Flask
+from flask_jwt_extended import JWTManager
 from extensions import db
-from config import PG_URL
+from auth.routes import auth
+from config import (
+    SECRET_KEY,
+    SQLALCHEMY_DATABASE_URI,
+    JWT_SECRET_KEY,
+    JWT_TOKEN_LOCATION,
+    JWT_ACCESS_TOKEN_EXPIRES,
+    JWT_REFRESH_TOKEN_EXPIRES,
+)
 
+# Inicializa o Flask
 app = Flask(__name__)
 
-# Configurar a URI do banco de dados corretamente
-app.config["SQLALCHEMY_DATABASE_URI"] = PG_URL  
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False  # Evita warnings
+# Configurações do Flask
+app.config["SECRET_KEY"] = SECRET_KEY
+app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
+# Configurações do Flask-JWT-Extended
+app.config["JWT_SECRET_KEY"] = JWT_SECRET_KEY
+app.config["JWT_TOKEN_LOCATION"] = JWT_TOKEN_LOCATION
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = JWT_ACCESS_TOKEN_EXPIRES
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = JWT_REFRESH_TOKEN_EXPIRES
+
+# Inicializa as extensões
 db.init_app(app)
+jwt = JWTManager(app)
+
+# Registra o blueprint de autenticação
+app.register_blueprint(auth, url_prefix="/auth")
+if __name__ == '__main__':
+    with app.app_context():
+        # Testa a conexão com o banco de dados
+        try:
+            db.engine.connect()
+            print("Conexão com o banco de dados estabelecida com sucesso!")
+        except Exception as e:
+            print(f"Erro ao conectar ao banco de dados: {e}")
+
+        # Cria as tabelas (se não existirem)
+        db.create_all()
+
+        # Adiciona um usuário de teste (opcional)
+        try:
+            # user = User(username='testuser', email='test@example.com')
+            # user.set_password('senha_segura')
+            # db.session.add(user)
+            # db.session.commit()
+            print("Usuário de teste adicionado!")
+        except Exception as e:
+            print(f"Erro ao adicionar usuário de teste: {e}")
+
+
+
+
 
 
 # ----------------- Antigo projeto -------------------
