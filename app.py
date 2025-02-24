@@ -1,7 +1,9 @@
 from flask import Flask
 from flask_jwt_extended import JWTManager
-from extensions import db
+from flask_migrate import Migrate
 from auth.routes import auth
+from extensions import db
+# from auth import auth
 from config import (
     SECRET_KEY,
     SQLALCHEMY_DATABASE_URI,
@@ -28,9 +30,11 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = JWT_REFRESH_TOKEN_EXPIRES
 # Inicializa as extensões
 db.init_app(app)
 jwt = JWTManager(app)
+migrate = Migrate(app, db)  # Inicializa o Flask-Migrate
 
 # Registra o blueprint de autenticação
-app.register_blueprint(auth, url_prefix="/auth")
+app.register_blueprint(auth, url_prefix='/auth')   # Rota de autenticação (login, registro)
+
 if __name__ == '__main__':
     with app.app_context():
         # Testa a conexão com o banco de dados
