@@ -4,7 +4,7 @@ from auth.jwt import create_token_pair
 from models.models import Room, User, BlackListToken
 from extensions import db
 from auth.hash import verify_password, get_password_hash
-from auth.exception import BadRequestException, AuthorizationException
+from auth.exception import BadRequestException, AuthorizationException, NotFoundException
 from auth.schemas import UserLogin, UserRegister, UserResponse
 
 # 🔹 Criando um Blueprint
@@ -60,6 +60,43 @@ def register():
 
     return jsonify({"message": "User successfully registered"}), 201
 
+@auth.route('/user/profile', methods=['GET'])
+@jwt_required()
+def get_profile():
+    """
+    Rota para visualizar o perfil do usuário logado.
+    Inclui a lista de salas em que o usuário é administrador.
+    """
+    print("Rota /user/profile acessada")  # Log para depuração
+
+    # Obtém o ID do usuário logado
+    logged_in_user_id = get_jwt_identity()
+    print(f"ID do usuário logado: {logged_in_user_id}")  # Log para depuração
+
+    # Busca o usuário no banco de dados
+    user = User.query.filter_by(id=logged_in_user_id).first()
+    if not user:
+        print("Usuário não encontrado")  # Log para depuração
+        raise NotFoundException('Usuário não encontrado')
+
+    # Busca as salas em que o usuário é administrador (criador)
+    admin_rooms = Room.query.filter_by(creator_id=user.id).all()
+    admin_rooms_list = [
+        {
+            "room_id": str(room.id),
+            "room_name": room.name,
+            "created_at": room.created_at.isoformat() if room.created_at else None
+        }
+        for room in admin_rooms
+    ]
+
+    # Retorna as informações do usuário
+    return jsonify({
+        "username": user.username,
+        "email": user.email,
+        "created_at": user.created_at.isoformat() if user.created_at else None,
+        "admin_rooms": admin_rooms_list  # Lista de salas em que o usuário é administrador
+    }), 200
 
 @auth.route('/refresh', methods=[POST])
 @jwt_required(refresh=True)  # Exige um refresh token
@@ -96,7 +133,7 @@ def logout():
 
     return jsonify({"message": "Successfully logged out"}), 200
 
-
+# ----------------- função de administrador -------------------
 
 @auth.route("/users", methods=["GET"])
 def get_users():
@@ -110,6 +147,32 @@ def get_users():
         for user in users
     ]
     return jsonify(users_list), 200
+
+@auth.route("/user/rooms", methods=["GET"])
+@jwt_required()
+def list_user_rooms():
+    """
+    Rota para listar todas as salas em que o usuário logado está participando.
+    """
+    # Obtém o ID do usuário logado
+    logged_in_user_id = get_jwt_identity()
+
+    # Busca o usuário logado
+    user = User.query.filter_by(id=logged_in_user_id).first()
+    if not user:
+        return jsonify({"message": "Usuário não encontrado"}), 404
+
+    # Formata a resposta com as salas do usuário
+    rooms_list = []
+    for room in user.rooms:
+        rooms_list.append({
+            "room_id": str(room.id),
+            "room_name": room.name,
+            "creator": room.creator.username,
+            "created_at": room.created_at.isoformat() if room.created_at else None
+        })
+
+    return jsonify({"rooms": rooms_list}), 200
 
 @auth.route("/create_room", methods=["POST"])
 @jwt_required()
@@ -323,7 +386,7 @@ def leave_room(room_id):
 
     return jsonify({"message": "Usuário saiu da sala com sucesso"}), 200
 
-
+# ----------------- para o admin da sala remover um usuário -------------------
 @auth.route("/rooms/<uuid:room_id>/remove_user/<uuid:user_id>", methods=["DELETE"])
 @jwt_required()
 def remove_user_from_room(room_id, user_id):
@@ -356,6 +419,8 @@ def remove_user_from_room(room_id, user_id):
     db.session.commit()
 
     return jsonify({"message": "Usuário removido da sala com sucesso"}), 200
+
+# ----------------- rota para editar o nome de uma room -------------------
 
 # @auth.route("/create_room", methods=["POST"])
 # @jwt_required()

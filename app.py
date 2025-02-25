@@ -3,6 +3,9 @@ from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 from auth.routes import auth
 from extensions import db
+
+from flask_cors import CORS
+
 # from auth import auth
 from config import (
     SECRET_KEY,
@@ -15,6 +18,8 @@ from config import (
 
 # Inicializa o Flask
 app = Flask(__name__)
+# CORS(app, resources={r"/*": {"origins": "http://localhost:3000"}}, supports_credentials=True)
+CORS(app, origins=["http://localhost:3000"])
 
 # Configurações do Flask
 app.config["SECRET_KEY"] = SECRET_KEY
