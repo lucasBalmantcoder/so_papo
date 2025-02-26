@@ -34,6 +34,7 @@ Redux – Gerenciamento de estado
 
 # Estrutura do Projeto
 
+```
 sopapo-backend/
 ├── doc                  # arquivos solicitados pelo professor
 ├── teste1.py            # arquivo de teste para aplicação
@@ -47,7 +48,7 @@ sopapo-backend/
 ├── templates/           # Sem uso 
 ├── requirements.txt     # Dependências do projeto
 └── README.md            # Documentação do projeto
-
+```
 
 
 # Antes de instalar, você precisa ter:
