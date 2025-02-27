@@ -36,6 +36,8 @@ class Room(BaseModel):
     users: Mapped[list['User']] = relationship("User", secondary=user_room_association, back_populates="rooms")
 
 # ------------------- User Model --------------------
+# class User(BaseModel):
+
 class User(BaseModel):
     __tablename__ = 'users'
     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
@@ -45,23 +47,78 @@ class User(BaseModel):
     # Relacionamentos
     rooms: Mapped[list['Room']] = relationship('Room', secondary=user_room_association, back_populates='users')
     created_rooms: Mapped[list['Room']] = relationship("Room", back_populates="creator")
+    
+    # Relacionamento com Message
+    messages: Mapped[list['Message']] = relationship("Message", back_populates="user")
+# 2222222222222222
+# class User(BaseModel):
+#     __tablename__ = 'users'
+#     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+#     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+#     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    
+#     # Relacionamentos
+#     rooms: Mapped[list['Room']] = relationship('Room', secondary=user_room_association, back_populates='users')
+#     created_rooms: Mapped[list['Room']] = relationship("Room", back_populates="creator")
+    
+#     # Novo relacionamento com Message
+#     messages: Mapped[list['Message']] = relationship("Message", back_populates="user")
 
-    def set_password(self, password: str):
-        self.password_hash = generate_password_hash(password)
 
-    def check_password(self, password: str) -> bool:
-        return check_password_hash(self.password_hash, password)
+
+# 1111111111111111111
+#     __tablename__ = 'users'
+#     username: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+#     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+#     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    
+#     # Relacionamentos
+#     rooms: Mapped[list['Room']] = relationship('Room', secondary=user_room_association, back_populates='users')
+#     created_rooms: Mapped[list['Room']] = relationship("Room", back_populates="creator")
+
+#     def set_password(self, password: str):
+#         self.password_hash = generate_password_hash(password)
+
+#     def check_password(self, password: str) -> bool:
+#         return check_password_hash(self.password_hash, password)
 
 # ---------------- Message Model -----------------
+
 class Message(BaseModel):
     __tablename__ = 'messages'
-    username: Mapped[str] = mapped_column(String(100), nullable=False)
     room_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('rooms.id'))
     message: Mapped[str] = mapped_column(Text, nullable=False)
-    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id'))  # Remova o comentário
     timestamp: Mapped[datetime] = mapped_column(default=utcnow)
     delivered: Mapped[bool] = mapped_column(Boolean, default=False)
     read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    # Relacionamento com o User
+    user: Mapped['User'] = relationship("User", back_populates="messages")
+
+# 22222222
+# class Message(BaseModel):
+#     __tablename__ = 'messages'
+#     room_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('rooms.id'))
+#     message: Mapped[str] = mapped_column(Text, nullable=False)
+#     # user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id'))
+#     timestamp: Mapped[datetime] = mapped_column(default=utcnow)
+#     delivered: Mapped[bool] = mapped_column(Boolean, default=False)
+#     read: Mapped[bool] = mapped_column(Boolean, default=False)
+
+#     # Relacionamento com o User
+#     user: Mapped['User'] = relationship("User", back_populates="messages")
+
+# 1111111111
+# class Message(BaseModel):
+#     __tablename__ = 'messages'
+#     username: Mapped[str] = mapped_column(String(100), nullable=False)
+#     room_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('rooms.id'))
+#     message: Mapped[str] = mapped_column(Text, nullable=False)
+#     user_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('users.id'))
+#     timestamp: Mapped[datetime] = mapped_column(default=utcnow)
+#     delivered: Mapped[bool] = mapped_column(Boolean, default=False)
+#     read: Mapped[bool] = mapped_column(Boolean, default=False)
 
 # ---------------- Blacklist Token Model --------------
 class BlackListToken(BaseModel):

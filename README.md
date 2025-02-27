@@ -1,64 +1,84 @@
 # SóPapo – Aplicação de chat de conversas baseado no whatsApp
-
+```
 Descrição:
 
-SóPapo é uma plataforma de mensagens em tempo real desenvolvida com Flask no backend e React.js no frontend. O sistema permite comunicação em grupos de estudo, trabalho ou lazer, com recursos como criação de salas, troca de mensagens, compartilhamento de arquivos e mais.
-
+SóPapo é uma plataforma de mensagens em tempo real desenvolvida com Flask no backend e React.js no frontend. O sistema permite comunicação por mensagens, com o recurso de criação de sala e gerenciamento de sala.
+```
 
 # Funcionalidades:
+```
+* Cadastro e autenticação de usuários (JWT).
+* Criação e gerenciamento de salas de conversa.
+* Envio e recebimento de mensagens.
+* Controle de acesso, (só poderá mandar msg os que são participantes das salas)
 
-* Cadastro e autenticação de usuários (JWT)
-* Criação e gerenciamento de salas de conversa
-* Envio e recebimento de mensagens em tempo real (WebSockets)
-* Controle de permissões para participantes
-* Indicadores de leitura e entrega
-* Compartilhamento de arquivos (Desafio de implementação)
-
+* Indicadores de leitura e entrega (não funcional)
+* Compartilhamento de arquivos (não funcional)
+```
 
 
 # Tecnologias Utilizadas backend:
-
+```
 Flask – Framework para desenvolvimento da API
 Flask-SQLAlchemy – ORM para gerenciamento do banco de dados
 Flask-JWT-Extended – Autenticação via tokens JWT
-Flask-SocketIO – Suporte para comunicação em tempo real
+Flask-SocketIO – Suporte para comunicação em tempo real (implementado, mas não usado no projeto atual)
 PostgreSQL – Banco de dados relacional
 WebSockets – Comunicação em tempo real
-
-
-# Tecnologias para o frontend (ainda não implementado)
-
-React.js – Interface do usuário
-Redux – Gerenciamento de estado
-
-
+```
 # Estrutura do Projeto
 
 ```
-sopapo-backend/
-├── doc                  # arquivos solicitados pelo professor
-├── teste1.py            # arquivo de teste para aplicação
-├── app.py               # Arquivo principal da aplicação Flask
-├── config.py            # Configurações do sistema
-├── extensions.py        # Inicialização das extensões Flask
-├── models/              # Modelos do banco de dados      
-│   ├── models.py
-├── routes/              # Rotas da API
-│   ├── auth.py
-├── templates/           # Sem uso 
-├── requirements.txt     # Dependências do projeto
-└── README.md            # Documentação do projeto
+
+├── app.py-----------------------------------------(Inicializador do projeto, ponto de entrada da aplicação Flask)
+├── auth
+│   ├── exception.py------------------------------(Define exceções personalizadas para autenticação e autorização)
+│   ├── hash.py-----------------------------------(Lida com hash de senhas e segurança)
+│   ├── jwt.py------------------------------------(Gerenciamento de tokens JWT para autenticação)
+│   │   ├── grupos.py----------------------------(Gerenciamento de grupos no sistema)
+│   │   ├── hash.py------------------------------(Funções relacionadas a hash e segurança)
+│   │   ├── jwt.py--------------------------------(Autenticador JWT)
+│   │   ├── rooms.py-----------------------------(Não usado atualmente)
+│   │   ├── routes.py----------------------------(Novas rotas do projeto)
+│   │   └── schemas.pyc--------------------------(Esquema de dados compilado)
+│   ├── rooms.py---------------------------------(Gerenciamento de salas e participantes)
+│   ├── routes.py--------------------------------(Define as rotas de autenticação do sistema)
+│   └── schemas.py------------------------------(Define os esquemas de dados para validação)
+├── config.py------------------------------------(Configurações gerais do projeto, como conexões e variáveis de ambiente)
+├── datebase
+│   └── create_db.py----------------------------(Script para criação do banco de dados)
+├── doc
+│   ├── Modelo de banco de dados.png------------(Imagem representando o modelo do banco de dados)
+│   └── DVP SD SóPapo.docx.pdf------------------(Documentação do projeto)
+├── extensions.py--------------------------------(Extensões e configurações adicionais para a aplicação)
+├── migration-----------------------------------(Diretório para controle de migrações do banco de dados)
+├── models
+│   └── models.py-------------------------------(Define os modelos de dados do banco de dados usando SQLAlchemy)
+├── README.md----------------------------------(Arquivo de documentação geral do projeto)
+├── requirements.txt---------------------------(Lista de dependências necessárias para rodar o projeto)
+├── routes
+│   └── auth.py---------------------------------(Antiga rota de autenticação do projeto, atualmente não usada)
+├── sockets.py---------------------------------(Configuração do WebSockets para mensagens em tempo real)
+├── templates
+│   └── index.html-----------------------------(Modelo de página HTML para renderização no backend)
+├── testadb.py---------------------------------(Não usado atualmente)
+├── teste1.py----------------------------------(Arquivos de teste e debug)
+├── teste2.py----------------------------------(Arquivos de teste e debug)
+└── utils.py-----------------------------------(Não usado atualmente)
 ```
 
 
-# Antes de instalar, você precisa ter:
 
+
+# Antes de instalar, você precisa ter:
+```
 Python 3.10+
 PostgreSQL instalado (ainda não funcionando a conexaão com o banco de dados)
 Node.js (caso vá rodar o frontend no futuro)
-
+```
 
 # Instalação e Execução
+```
 🔹 1. Clonar o repositório
 
 HTTPs: https://github.com/lucasBalmantcoder/so_papo.git
@@ -97,3 +117,4 @@ A API estará rodando em http://127.0.0.1:5000
 * room: room1
 
 após conexão, é só mandar as mensagens para os outros usuários.
+```

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import get_jwt, jwt_required, get_jwt_identity, create_access_token
 from auth.jwt import create_token_pair
-from models.models import Room, User, BlackListToken
+from models.models import Message, Room, User, BlackListToken
 from extensions import db
 from auth.hash import verify_password, get_password_hash
 from auth.exception import BadRequestException, AuthorizationException, NotFoundException
@@ -419,6 +419,137 @@ def remove_user_from_room(room_id, user_id):
     db.session.commit()
 
     return jsonify({"message": "Usuário removido da sala com sucesso"}), 200
+
+@auth.route("/rooms/<uuid:room_id>/add_user/<uuid:user_id>", methods=["POST"])
+@jwt_required()
+def add_user_to_room(room_id, user_id):
+    """
+    Rota para o criador da sala adicionar um usuário à sala.
+    """
+    # Obtém o ID do usuário logado
+    logged_in_user_id = get_jwt_identity()
+
+    # Busca a sala pelo ID
+    room = Room.query.filter_by(id=room_id).first()
+    if not room:
+        return jsonify({"message": "Sala não encontrada"}), 404
+
+    # Verifica se o usuário logado é o criador da sala
+    if str(room.creator_id) != logged_in_user_id:
+        return jsonify({"message": "Apenas o criador da sala pode adicionar usuários"}), 403
+
+    # Busca o usuário a ser adicionado
+    user_to_add = User.query.filter_by(id=user_id).first()
+    if not user_to_add:
+        return jsonify({"message": "Usuário a ser adicionado não encontrado"}), 404
+
+    # Verifica se o usuário já está na sala
+    if user_to_add in room.users:
+        return jsonify({"message": "Usuário já está na sala"}), 400
+
+    # Adiciona o usuário à sala
+    room.users.append(user_to_add)
+    db.session.commit()
+
+    return jsonify({"message": "Usuário adicionado à sala com sucesso"}), 200
+
+
+# ----------------- implementação de chat -------------------
+
+@auth.route('/messages', methods=[POST])
+@jwt_required()
+def send_message():
+    data = request.json
+    room_id = data.get('room_id')
+    message = data.get('message')
+
+    if not room_id or not message:
+        raise BadRequestException('Room ID and message are required')
+
+    room = Room.query.filter_by(id=room_id).first()
+    if not room:
+        raise BadRequestException('Sala não encontrada')
+
+    user_id = get_jwt_identity()
+
+    new_message = Message(
+        room_id=room_id,
+        message=message,
+        user_id=user_id  # Apenas o user_id é necessário
+    )
+
+    db.session.add(new_message)
+    db.session.commit()
+
+    return jsonify({"message": "Message sent successfully"}), 201
+
+
+
+@auth.route('/messages/<room_id>', methods=['GET'])
+@jwt_required()
+def get_messages(room_id):
+    room = Room.query.filter_by(id=room_id).first()
+    if not room:
+        raise NotFoundException('Room not found')
+
+    messages = Message.query.filter_by(room_id=room.id).all()
+
+    messages_list = [
+        {
+            "user_id": message.user_id,
+            "username": message.user.username,  # Obtido via relacionamento
+            "message": message.message,
+            "timestamp": message.timestamp.isoformat() if message.timestamp else None,
+            "delivered": message.delivered,
+            "read": message.read
+        }
+        for message in messages
+    ]
+
+    return jsonify({"messages": messages_list}), 200
+
+
+
+
+
+
+
+@auth.route('/messages/<message_id>/delivered', methods=[PUT])
+@jwt_required()
+def mark_message_delivered(message_id):
+    """
+    Rota para marcar uma mensagem como entregue.
+    """
+    # Busca a mensagem no banco
+    message = Message.query.filter_by(id=message_id).first()
+    if not message:
+        raise NotFoundException('Message not found')
+
+    # Marca a mensagem como entregue
+    message.delivered = True
+    db.session.commit()
+
+    return jsonify({"message": "Message marked as delivered"}), 200
+
+
+@auth.route('/messages/<message_id>/read', methods=[PUT])
+@jwt_required()
+def mark_message_read(message_id):
+    """
+    Rota para marcar uma mensagem como lida.
+    """
+    # Busca a mensagem no banco
+    message = Message.query.filter_by(id=message_id).first()
+    if not message:
+        raise NotFoundException('Message not found')
+
+    # Marca a mensagem como lida
+    message.read = True
+    db.session.commit()
+
+    return jsonify({"message": "Message marked as read"}), 200
+
+
 
 # ----------------- rota para editar o nome de uma room -------------------
 
