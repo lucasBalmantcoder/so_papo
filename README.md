@@ -77,36 +77,36 @@ PostgreSQL instalado (ainda não funcionando a conexaão com o banco de dados)
 Node.js (caso vá rodar o frontend no futuro)
 ```
 
-# Instalação e Execução
-```
-🔹 1. Clonar o repositório
+ Instalação e Execução
 
+#  1. Clonar o repositório
+```
 HTTPs: https://github.com/lucasBalmantcoder/so_papo.git
 SSH: git@github.com:lucasBalmantcoder/so_papo.git
-
-🔹 2. Criar e ativar ambiente virtual
-
+```
+#  2. Criar e ativar ambiente virtual
+```
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
 venv\Scripts\activate      # Windows
-
-🔹 3. Instalar dependências
-
+```
+# 3. Instalar dependências
+```
 pip install -r requirements.txt
-
-🔹 4. Configurar banco de dados
-
+```
+# 4. Configurar banco de dados
+```
     AINDA NÃO FUNCIONA.
-
-🔹  5. Rodar a aplicação
-
+```
+# 5. Rodar a aplicação
+```
 flask run
 
 
 python app.py
-
+```
 # testes
-
+```
 A API estará rodando em http://127.0.0.1:5000
 
 * execute o test.py para fazer a conexãono servidor.
