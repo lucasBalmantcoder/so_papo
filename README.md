@@ -1,11 +1,12 @@
 # SóPapo – Aplicação de chat de conversas baseado no whatsApp
-```
+
 Descrição:
 
 SóPapo é uma plataforma de mensagens em tempo real desenvolvida com Flask no backend e React.js no frontend. O sistema permite comunicação por mensagens, com o recurso de criação de sala e gerenciamento de sala.
-```
+
 
 # Funcionalidades:
+
 ```
 * Cadastro e autenticação de usuários (JWT).
 * Criação e gerenciamento de salas de conversa.
@@ -96,12 +97,33 @@ pip install -r requirements.txt
 ```
 # 4. Configurar banco de dados
 ```
-    AINDA NÃO FUNCIONA.
+Na pasta .env configure o link do db postgree
+
+APP_NAME=so_papo
+
+# Chave secreta para segurança
+SECRET_KEY= "example"
+
+# Configuração do Banco de Dados
+POSTGRES_USER="example"
+POSTGRES_PASSWORD="example"
+
+POSTGRES_HOST="localhost"  # Ou o endereço do servidor do banco de dados
+
+POSTGRES_PORT="5432"  # Porta padrão do PostgreSQL
+
+POSTGRES_DB=" seubancoaqui " # adicione o nome do seu banco de dados
+
+# URL do banco de dados para SQLAlchemy
+DATABASE_URL=postgresql://example:example@localhost:5432/seubancoaqui
+
+# Configuração do JWT
+
+JWT_SECRET_KEY=sua_chave_jwt
 ```
 # 5. Rodar a aplicação
 ```
 flask run
-
 
 python app.py
 ```
@@ -109,12 +131,4 @@ python app.py
 ```
 A API estará rodando em http://127.0.0.1:5000
 
-* execute o test.py para fazer a conexãono servidor.
-* adicione um nome de usuário e a sala
-* para os testes, usei:
-
-* user: user1
-* room: room1
-
-após conexão, é só mandar as mensagens para os outros usuários.
 ```
